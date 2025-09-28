@@ -1,0 +1,26 @@
+Package: shinytest2assist
+Title: MCP Server for Generating Shinytest2 Test Cases
+Version: 0.1.0
+Authors@R: person("Your", "Name", email = "your.email@example.com", role = c("aut", "cre"))
+Description: An MCP (Model Context Protocol) server that generates automated test cases 
+    for shiny applications using shinytest2. It converts natural language prompts 
+    into executable test code using advanced NLP parsing and browser automation.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+    mcpr,
+    shinytest2,
+    testthat,
+    chromote,
+    cli,
+    rlang,
+    jsonlite,
+    stringr,
+    purrr,
+    glue
+Suggests:
+    covr,
+    mockery,
+    withr
