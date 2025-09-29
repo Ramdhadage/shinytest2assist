@@ -10,7 +10,7 @@ parse_test_actions(prompt)
 \item{prompt}{Character string containing test description}
 }
 \value{
-List of parsed actions with parameters
+List of parsed actions with parameters in order
 }
 \description{
 Parse Natural Language Prompt into Test Actions

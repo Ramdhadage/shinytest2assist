@@ -4,7 +4,7 @@
 \alias{generate_test_code}
 \title{Convert Test Actions to Shinytest2 Code}
 \usage{
-generate_test_code(actions)
+generate_test_code(actions, app_path = ".", test_name = "generated_test")
 }
 \arguments{
 \item{actions}{List of parsed test actions}
