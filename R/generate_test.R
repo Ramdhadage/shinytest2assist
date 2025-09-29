@@ -1,6 +1,6 @@
-#' @importFrom mcpr mcp_tool mcp_http
+#' @import shiny mcpr
 #' @importFrom rlang arg_match
-#' @importFrom cli cli_alert_success cli_alert_warning cli_alert_danger
+#' @importFrom cli cli_alert_success cli_alert_warning cli_alert_danger cli_alert_info
 #' @importFrom jsonlite toJSON fromJSON
 #' @importFrom stringr str_match str_extract_all str_trim
 #' @importFrom purrr map_chr
@@ -8,10 +8,11 @@
 NULL
 
 #' Parse Natural Language Prompt into Test Actions
-#' 
+#' @import stringr
 #' @param prompt Character string containing test description
 #' @return List of parsed actions with parameters
 #' @keywords internal
+#' @export 
 parse_test_actions <- function(prompt) {
   # Define regex patterns for common actions
   patterns <- list(
@@ -46,6 +47,7 @@ parse_test_actions <- function(prompt) {
 #' @param type Character string indicating element type
 #' @return Character string containing CSS selector
 #' @keywords internal
+#' @export 
 generate_selector <- function(element, type = "input") {
   # Clean and normalize element name
   element <- str_trim(element)
@@ -68,6 +70,7 @@ generate_selector <- function(element, type = "input") {
 #' @param actions List of parsed test actions
 #' @return Character string containing generated test code
 #' @keywords internal
+#' @export
 generate_test_code <- function(actions) {
   code_lines <- character(0)
   
@@ -114,26 +117,23 @@ generate_test_code <- function(actions) {
 #' @description This MCP tool converts natural language descriptions into
 #' production-ready shinytest2 test code using advanced prompt parsing
 #'
-#' @param prompt Character string describing the test scenario in natural language
-#' @param app_path Character string path to Shiny application directory or app.R file
-#' @param test_name Optional character string for test name (auto-generated if NULL)
-#' @param options Named list of additional options (browser, headless, timeout)
-#'
+#' @param params List containing:
+#'   \itemize{
+#'     \item prompt Character string describing the test scenario
+#'     \item app_path Character string path to Shiny application
+#'     \item test_name Optional character string for test name
+#'     \item options Named list of additional options
+#'   }
 #' @return List with structure: list(success = TRUE/FALSE, data = test_code, 
 #'         message = "...", error = NULL)
-#'
-#' @examples
-#' \dontrun{
-#' result <- generate_shinytest2_test(
-#'   prompt = "Click submit button and verify success message appears",
-#'   app_path = "./my-shiny-app",
-#'   test_name = "submit_workflow"
-#' )
-#' }
-#'
 #' @export
-generate_shinytest2_test <- function(prompt, app_path, test_name = NULL, 
-                                   options = list()) {
+generate_shinytest2_test <- function(params) {
+  # Extract parameters from the params list
+  prompt <- params$prompt
+  app_path <- params$app_path
+  test_name <- params$test_name
+  options <- params$options %||% list()
+  
   # Validate inputs
   tryCatch({
     if (!is.character(prompt) || length(prompt) != 1 || nchar(prompt) == 0) {
@@ -147,10 +147,6 @@ generate_shinytest2_test <- function(prompt, app_path, test_name = NULL,
     if (!is.null(test_name) && 
         (!is.character(test_name) || length(test_name) != 1)) {
       stop("Test name must be NULL or a character string")
-    }
-    
-    if (!is.list(options)) {
-      stop("Options must be a list")
     }
     
     # Set default options
@@ -183,24 +179,23 @@ generate_shinytest2_test <- function(prompt, app_path, test_name = NULL,
     cli::cli_alert_info("Generating test code...")
     test_code <- generate_test_code(actions)
     
-    # Return success response
-    list(
+    # Return response in MCP format
+    mcpr::response_text(list(
       success = TRUE,
       data = paste(test_code, collapse = "\n"),
-      message = sprintf("Successfully generated test with %d actions", 
-                       length(actions)),
+      message = sprintf("Successfully generated test with %d actions", length(actions)),
       error = NULL
-    )
+    ))
     
   }, error = function(e) {
-    # Return error response
+    # Return error response in MCP format
     cli::cli_alert_danger(conditionMessage(e))
-    list(
+    mcpr::response_text(list(
       success = FALSE,
       data = NULL,
       message = "Failed to generate test",
       error = conditionMessage(e)
-    )
+    ))
   })
 }
 
@@ -215,40 +210,100 @@ generate_shinytest2_test <- function(prompt, app_path, test_name = NULL,
 #' @export
 create_shinytest2_mcp_server <- function(port = 8080, host = "127.0.0.1") {
   # Create MCP tool definition
-  tool <- mcp_tool(
+  tool <- new_tool(
     name = "generate_shinytest2_test",
     description = paste(
       "Generates automated test cases for Shiny applications using natural",
       "language prompts. Converts descriptions into shinytest2 code."
     ),
-    parameters = list(
-      prompt = list(
-        type = "string",
-        description = "Natural language description of test scenario"
+    input_schema = schema(
+      properties = list(
+        prompt = property_string(
+          "Prompt",
+          "Natural language description of test scenario",
+          required = TRUE
       ),
-      app_path = list(
-        type = "string", 
-        description = "Path to Shiny application"
+        app_path = property_string(
+          "App path",
+          "Path to Shiny application",
+          required = TRUE
       ),
-      test_name = list(
-        type = "string",
-        description = "Optional name for generated test",
+        test_name = property_string(
+          "Test name",
+          "Optional name for generated test",
+          required = FALSE
+        ),
+        options = property_object(
+          "Options",
+          "Additional options for test generation",
+          properties = list(
+            browser = property_string(
+              "Browser",
+              "Browser to use for testing",
+              required = FALSE
+            ),
+            headless = property_boolean(
+              "Headless",
+              "Whether to run browser in headless mode",
         required = FALSE
       ),
-      options = list(
-        type = "object",
-        description = "Additional options for test generation",
+            timeout = property_number(
+              "Timeout",
+              "Timeout in milliseconds",
+              required = FALSE
+            )
+          ),
         required = FALSE
+      )
       )
     ),
     handler = generate_shinytest2_test
   )
   
-  # Create and start MCP server
-  server <- mcp_http(
+  # Create MCP server
+  server <- new_server(
+    name = "Shinytest2 Generator",
+    description = "MCP server for generating shinytest2 test cases",
+    version = "1.0.0"
+  )
+  
+  server <- add_capability(server, tool)
+  
+  # Create custom HTTP server using httpuv
+  httpuv::startServer(
     host = host,
     port = port,
-    tools = list(tool)
+    app = list(
+      call = function(req) {
+        if (req$REQUEST_METHOD == "POST") {
+          # Read the request body
+          body <- rawToChar(req$rook.input$read())
+          
+          # Parse JSON-RPC request
+          request <- jsonlite::fromJSON(body)
+          
+          # Process using mcpr internals
+          result <- mcpr:::process_request(server, request)
+          
+          # Return response
+          list(
+            status = 200L,
+            headers = list(
+              "Content-Type" = "application/json"
+            ),
+            body = jsonlite::toJSON(result, auto_unbox = TRUE)
+          )
+        } else {
+          list(
+            status = 405L,
+            headers = list(
+              "Content-Type" = "text/plain"
+            ),
+            body = "Method not allowed"
+          )
+        }
+      }
+    )
   )
   
   cli::cli_alert_success(sprintf(
@@ -257,5 +312,5 @@ create_shinytest2_mcp_server <- function(port = 8080, host = "127.0.0.1") {
     port
   ))
   
-  server
+  invisible(server)
 }
