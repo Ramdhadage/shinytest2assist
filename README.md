@@ -22,11 +22,14 @@ server <- create_shinytest2_mcp_server(port = 8080)
 2. Generate test cases by sending prompts:
 
 ```R
-result <- generate_shinytest2_test(
-  prompt = "Click submit button and verify success message appears",
-  app_path = "./my-shiny-app",
-  test_name = "test_submit_workflow"
+params <- list(prompt = "Enter 'John Doe' in name field, select 'Blue' from color dropdown, enter '30' in age field, click submit button, and verify greeting shows 'Hello John Doe!'",
+  app_path = "demo-app",  # Update this path to where you saved app.R
+  test_name = "test_form_submission")
+# Generate test cases
+test_result <- generate_shinytest2_test(
+  params = params
 )
+cat(test_result$text[2])
 ```
 
 ## Features
