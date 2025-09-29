@@ -1,80 +1,111 @@
-# Shinytest2 Test Generation with MCP
+# shinytest2assist
+
+Generate automated test cases for Shiny applications using natural language prompts.
 
 ## Overview
 
-This package provides a Model Context Protocol (MCP) server that generates automated test cases for Shiny applications using natural language prompts. It leverages shinytest2 for browser automation and implements sophisticated prompt parsing to convert English descriptions into executable test code.
+`shinytest2assist` is an R package that simplifies the creation of automated tests for Shiny applications. By leveraging the power of natural language processing and the shinytest2 framework, it enables developers to write test cases using plain English descriptions, which are then automatically converted into executable test code.
 
 ## Installation
 
 ```R
+# Install from GitHub
 remotes::install_github("Ramdhadage/shinytest2assist")
 ```
 
-## Usage
+## Quick Start
 
-1. Start the MCP server:
+1. First, load the library and create an MCP server:
 
 ```R
 library(shinytest2assist)
+
+# Start the MCP server
 server <- create_shinytest2_mcp_server(port = 8080)
 ```
 
-2. Generate test cases by sending prompts:
+2. Generate test cases using natural language:
 
 ```R
-params <- list(prompt = "Enter 'John Doe' in name field, select 'Blue' from color dropdown, enter '30' in age field, click submit button, and verify greeting shows 'Hello John Doe!'",
-  app_path = "demo-app",  # Update this path to where you saved app.R
-  test_name = "test_form_submission")
-# Generate test cases
-test_result <- generate_shinytest2_test(
-  params = params
+# Define test parameters
+params <- list(
+  prompt = "Enter 'John Doe' in name field, select 'Blue' from color dropdown, 
+           enter '30' in age field, click submit button, 
+           and verify greeting shows 'Hello John Doe!'",
+  app_path = "demo-app",
+  test_name = "test_form_submission"
 )
-cat(test_result$text[2])
+
+# Generate the test
+test_result <- generate_shinytest2_test(params = params)
 ```
 
-## Features
+## Key Features
 
-- Natural language parsing for common UI interactions:
-  - Click buttons and links
-  - Enter text in inputs
-  - Select dropdown options  
-  - Wait for specific durations
-  - Verify output values
-  
-- Robust CSS selector generation with fallbacks:
+- **Natural Language Test Generation**
+  - Write tests in plain English
+  - Support for common UI interactions
+  - Automatic conversion to executable code
+
+- **Smart Selector Generation**
   - ID-based selectors
-  - Name attributes
-  - ARIA labels
-  - Automatic fallback chain
-  
-- Platform-aware test generation:
+  - Name attribute matching
+  - ARIA label support
+  - Fallback chain strategy
+
+- **Robust Test Framework**
   - Browser compatibility handling
-  - Platform-specific variants
+  - Platform-specific adaptations
   - Configurable timeouts
-  - Screenshot comparisons
+  - Screenshot comparison support
 
-- Comprehensive error handling:
+- **Error Handling & Debugging**
   - Detailed error messages
-  - Invalid input validation
   - Missing element detection
-  - Path verification
+  - Validation checking
+  - Built-in logging
 
-- Built-in logging and debugging:
-  - CLI progress indicators
-  - Action validation messages
-  - Timing information
-  - Failure diagnostics
+## Usage Examples
 
-- MCP protocol compliance:
-  - Standard tool definition
-  - Schema validation
-  - Parameter documentation
-  - Response formatting
+### Testing a Form Submission
+
+```R
+# Test a complex form interaction
+test_params <- list(
+  prompt = "Fill in registration form with email 'test@example.com',
+           select 'Premium' plan, agree to terms,
+           click 'Register' and verify success message",
+  app_path = "my-shiny-app",
+  test_name = "test_registration"
+)
+
+result <- generate_shinytest2_test(test_params)
+```
+
+### Testing Data Visualization
+
+```R
+# Test a data visualization interaction
+viz_test <- list(
+  prompt = "Select 'Sales' from dataset dropdown,
+           click 'Plot' button,
+           wait 2 seconds,
+           verify plot title contains 'Sales Trends'",
+  app_path = "sales-dashboard",
+  test_name = "test_plot_generation"
+)
+
+generate_shinytest2_test(viz_test)
+```
+
+## Demo
+
+[Coming soon: GIF demonstrations of test generation and execution]
 
 ## Contributing
 
-Contributions welcome! Please read CONTRIBUTING.md for details.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
