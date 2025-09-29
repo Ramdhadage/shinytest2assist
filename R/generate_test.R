@@ -19,7 +19,7 @@ parse_test_actions <- function(prompt) {
     input = "(?:enter(?:ing)?|type(?:ing)?|input(?:ting)?)\\s+['\"]([^'\"]+)['\"]\\s+(?:in(?:to)?(?:\\s+the)?|to(?:\\s+the)?)\\s+([\\w\\s-]+?)(?:\\s+field|\\s+input|\\s+box)?(?=\\s*[,.]|\\s+and|$)",
     select = "select(?:ing)?\\s+['\"]([^'\"]+)['\"]\\s+from(?:\\s+the)?\\s+([\\w\\s-]+?)(?:\\s+dropdown|\\s+select|\\s+list)?(?=\\s*[,.]|\\s+and|$)",
     click = "click(?:ing)?(?:\\s+(?:the|on))?\\s+([\\w\\s-]+?)(?:\\s+button)?(?=\\s*[,.]|\\s+and|$)",
-    expect = "(?:verify|expect|check)(?:\\s+that)?\\s+(.*?)(?=\\s*[,.]|\\s+and|$)",
+    expect = "(?:verify|expect|check)(?:\\s+that)?\\s+([\\w\\s-]+?)(?:\\s+shows?\\s+['\"]([^'\"]+)['\"])?(?=\\s*[,.]|\\s+and|$)",
     wait = "wait(?:ing)?\\s+(\\d+)(?:\\s+seconds?)?(?=\\s*[,.]|\\s+and|$)"
   )
 
@@ -55,7 +55,11 @@ parse_test_actions <- function(prompt) {
       }
     }
   }
-
+# Modified params extraction for expect type
+  if (action_type == "expect") {
+    param_text <- substr(prompt, capture_starts[1], capture_starts[1] + capture_lengths[1] - 1)
+    params[[1]] <- trimws(param_text)
+  }
   # Sort by position to maintain order
   if (length(all_matches) > 0) {
     positions <- sapply(all_matches, function(x) x$position)
@@ -81,20 +85,14 @@ parse_test_actions <- function(prompt) {
 #' @keywords internal
 #' @export
 generate_selector <- function(element, type = "input") {
-  # Clean and normalize element name
+  # Clean and normalize element name - simplified
   element <- str_trim(element)
-  element <- gsub("[^[:alnum:]]", "-", element)
-
-  # Generate selectors with fallbacks
-  selectors <- c(
-    sprintf("#%s", element),
-    sprintf("[id='%s']", element),
-    sprintf("[name='%s']", element),
-    sprintf("[aria-label='%s']", element)
-  )
-
-  # Return all selectors joined with comma
-  paste(selectors, collapse = ", ")
+  # For output elements, just return the element name as is
+  if (type == "output") {
+    return(element)
+  }
+  # For other elements, just return the cleaned name
+  return(element)
 }
 
 #' Convert Test Actions to Shinytest2 Code
@@ -121,25 +119,27 @@ generate_test_code <- function(actions, app_path = ".", test_name = "generated_t
     code_lines <- c(code_lines, code)
   }
 
-  # Add necessary scaffolding
+  # Add necessary scaffolding with here package
   c(
     "library(shinytest2)",
-    sprintf("test_that( '%s ', {", test_name),
-    "  # Initialize app driver with proper platform variant",
+    "library(here)",
+    "",
+    sprintf("test_that('%s', {", test_name),
+    "  app_dir <- here(\"demo-app\")",
+    "",
+    "  if (!dir.exists(app_dir)) {",
+    "    skip(paste(\"App directory\", app_dir, \"does not exist\"))",
+    "  }",
+    "",
     "  app <- AppDriver$new(",
-    sprintf("    app_dir = '%s',", app_path),
+    "    app_dir = app_dir,",
     sprintf("    name = '%s',", test_name),
     "    variant = platform_variant(),",
     sprintf("    load_timeout = %d", getOption("shinytest2.load_timeout", 5000)),
     "  )",
     "",
-    "  # Run test steps",
     paste("  ", code_lines),
     "",
-    "  # Take final snapshot",
-    "  app$expect_values()",
-    "",
-    "  # Cleanup",
     "  app$stop()",
     "})"
   )
@@ -161,6 +161,10 @@ generate_test_code <- function(actions, app_path = ".", test_name = "generated_t
 #'         message = "...", error = NULL)
 #' @export
 generate_shinytest2_test <- function(params) {
+  # Add here package to imports if not already present
+  if (!requireNamespace("here", quietly = TRUE)) {
+    stop("Package 'here' is required but not installed")
+  }
   # Extract parameters from the params list
   prompt <- params$prompt
   app_path <- params$app_path
