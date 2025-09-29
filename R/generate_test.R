@@ -165,11 +165,13 @@ generate_shinytest2_test <- function(params) {
   if (!requireNamespace("here", quietly = TRUE)) {
     stop("Package 'here' is required but not installed")
   }
+  
   # Extract parameters from the params list
   prompt <- params$prompt
   app_path <- params$app_path
   test_name <- params$test_name
   options <- params$options %||% list()
+  
   # Validate inputs
   tryCatch({
     if (!is.character(prompt) || length(prompt) != 1 || nchar(prompt) == 0) {
@@ -203,6 +205,13 @@ generate_shinytest2_test <- function(params) {
       test_name <- sprintf("test_%s", format(Sys.time(), "%Y%m%d_%H%M%S"))
     }
 
+    # Create tests/testthat directory if it doesn't exist
+    test_dir <- file.path("tests", "testthat")
+    if (!dir.exists(test_dir)) {
+      dir.create(test_dir, recursive = TRUE)
+      cli::cli_alert_info("Created directory: {test_dir}")
+    }
+
     # Parse natural language prompt into test actions
     cli::cli_alert_info("Parsing test actions from prompt...")
     actions <- parse_test_actions(prompt)
@@ -214,12 +223,26 @@ generate_shinytest2_test <- function(params) {
     # Generate test code
     cli::cli_alert_info("Generating test code...")
     test_code <- generate_test_code(actions, app_path, test_name)
+    
+    # Create the test file
+    test_file <- file.path(test_dir, paste0("test-", test_name, "-shinytest2.R"))
+    writeLines(test_code, test_file)
+    cli::cli_alert_success("Test file created: {test_file}")
+
+    # Print the generated code
+    cat("\nGenerated test code:\n\n")
+    cat(paste(test_code, collapse = "\n"))
+    cat("\n")
 
     # Return response in MCP format
     mcpr::response_text(list(
       success = TRUE,
-      data = paste(test_code, collapse = "\n"),
-      message = sprintf("Successfully generated test with %d actions", length(actions)),
+      data = list(
+        code = paste(test_code, collapse = "\n"),
+        file = test_file
+      ),
+      message = sprintf("Successfully generated test with %d actions and saved to %s", 
+                       length(actions), test_file),
       error = NULL
     ))
 

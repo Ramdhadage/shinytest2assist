@@ -16,7 +16,7 @@ generate_shinytest2_test(params)
 }}
 }
 \value{
-List with structure: list(success = TRUE/FALSE, data = test_code, 
+List with structure: list(success = TRUE/FALSE, data = test_code,
         message = "...", error = NULL)
 }
 \description{
