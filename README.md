@@ -69,7 +69,9 @@ Try it out yourself with our [demo app](https://shinylive.io/r/app/#code=NobwRAd
 
 ## Demo
 
-[Coming soon: GIF demonstrations of test generation and execution]
+See shinytest2assist in action:
+
+![shinytest2assist Demo](shinytest2assist-demo.gif)
 
 ## Contributing
 
