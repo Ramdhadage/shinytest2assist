@@ -31,12 +31,42 @@ result <- generate_shinytest2_test(
 
 ## Features
 
-- Natural language parsing for common UI interactions
-- Robust CSS selector generation with fallbacks
-- Platform-aware test generation
-- Comprehensive error handling
-- Built-in logging and debugging support
-- MCP protocol compliance
+- Natural language parsing for common UI interactions:
+  - Click buttons and links
+  - Enter text in inputs
+  - Select dropdown options  
+  - Wait for specific durations
+  - Verify output values
+  
+- Robust CSS selector generation with fallbacks:
+  - ID-based selectors
+  - Name attributes
+  - ARIA labels
+  - Automatic fallback chain
+  
+- Platform-aware test generation:
+  - Browser compatibility handling
+  - Platform-specific variants
+  - Configurable timeouts
+  - Screenshot comparisons
+
+- Comprehensive error handling:
+  - Detailed error messages
+  - Invalid input validation
+  - Missing element detection
+  - Path verification
+
+- Built-in logging and debugging:
+  - CLI progress indicators
+  - Action validation messages
+  - Timing information
+  - Failure diagnostics
+
+- MCP protocol compliance:
+  - Standard tool definition
+  - Schema validation
+  - Parameter documentation
+  - Response formatting
 
 ## Contributing
 
