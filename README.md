@@ -65,39 +65,6 @@ test_result <- generate_shinytest2_test(params = params)
   - Validation checking
   - Built-in logging
 
-## Usage Examples
-
-### Testing a Form Submission
-
-```R
-# Test a complex form interaction
-test_params <- list(
-  prompt = "Fill in registration form with email 'test@example.com',
-           select 'Premium' plan, agree to terms,
-           click 'Register' and verify success message",
-  app_path = "my-shiny-app",
-  test_name = "test_registration"
-)
-
-result <- generate_shinytest2_test(test_params)
-```
-
-### Testing Data Visualization
-
-```R
-# Test a data visualization interaction
-viz_test <- list(
-  prompt = "Select 'Sales' from dataset dropdown,
-           click 'Plot' button,
-           wait 2 seconds,
-           verify plot title contains 'Sales Trends'",
-  app_path = "sales-dashboard",
-  test_name = "test_plot_generation"
-)
-
-generate_shinytest2_test(viz_test)
-```
-
 ## Demo
 
 [Coming soon: GIF demonstrations of test generation and execution]
