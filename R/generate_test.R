@@ -222,12 +222,12 @@ create_shinytest2_mcp_server <- function(port = 8080, host = "127.0.0.1") {
           "Prompt",
           "Natural language description of test scenario",
           required = TRUE
-      ),
+        ),
         app_path = property_string(
           "App path",
           "Path to Shiny application",
           required = TRUE
-      ),
+        ),
         test_name = property_string(
           "Test name",
           "Optional name for generated test",
@@ -245,16 +245,16 @@ create_shinytest2_mcp_server <- function(port = 8080, host = "127.0.0.1") {
             headless = property_boolean(
               "Headless",
               "Whether to run browser in headless mode",
-        required = FALSE
-      ),
+              required = FALSE
+            ),
             timeout = property_number(
               "Timeout",
               "Timeout in milliseconds",
               required = FALSE
             )
           ),
-        required = FALSE
-      )
+          required = FALSE
+        )
       )
     ),
     handler = generate_shinytest2_test
@@ -308,7 +308,7 @@ create_shinytest2_mcp_server <- function(port = 8080, host = "127.0.0.1") {
   
   cli::cli_alert_success(sprintf(
     "MCP server started at http://%s:%d", 
-    host, 
+    host,
     port
   ))
   
